@@ -1,0 +1,22 @@
+name = UNL
+description = Base UNL theme which utilizes the wdn.unl.edu templates.
+screenshot = screenshot.png
+core = 7.x
+engine = phptemplate
+
+stylesheets[all][] = style.css
+
+scripts[] = theme.js
+
+regions[content] = Main Content
+regions[navlinks] = Navigation Links
+regions[leftcollinks] = Related Links
+regions[contactinfo] = Contact Us
+regions[optionalfooter] = Optional Footer
+regions[footercontent] = Footer Content
+
+plugins[panels][layouts] = layouts
+
+settings[toggle_logo] = 0
+settings[toggle_slogan] = 0
+settings[toggle_favicon] = 0
