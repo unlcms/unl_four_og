@@ -30,8 +30,6 @@ function unl_og_preprocess_page(&$vars, $hook) {
  * Implements hook_menu_breadcrumb_alter().
  */
 function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
-  echo '<pre>';var_dump($active_trail);echo '</pre>';
-
   $active_trail[0]['title'] = 'UNL';
 
   if (module_exists('og')) {
@@ -43,40 +41,40 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
     $front_url = drupal_get_normal_path(variable_get('site_frontpage', 'node'));
     $front_url = trim($front_url, '/');
     $front = explode('/', $front_url);
-    if($front[0]=='node' && ctype_digit($front[1])) {
+    if ($front[0]=='node' && ctype_digit($front[1])) {
       $front_nid = $front[1];
     }
 
-  //  echo '<pre>';var_dump($node);echo '</pre>';
-
     // Only splice in the current group if the current group is not the main/front group.
-    if (isset($node) && isset($front_nid) && $node->nid !== $front_nid) {
+    if (isset($node) && isset($front_nid) && (int)$node->nid !== (int)$front_nid) {
       $group_breadcrumb = array(
         'title' => $node->title,
-        'href' => 'node/'.$node->nid,
+        'href' => 'node/' . $node->nid,
         'link_path' => '',
-        'localized_options' => array( ),
+        'localized_options' => array(),
         'type' => 0,
       );
       array_splice($active_trail, 1, 0, array($group_breadcrumb));
     }
   }
-
-  echo '<pre>';var_dump($active_trail);echo '</pre>';
 }
 
 /**
  * Implements theme_breadcrumb().
  */
-function unl_og_breadcrumb($variables) {//echo '<pre>';var_dump($variables);echo '</pre>';
+function unl_og_breadcrumb($variables) {
   // Append title of current page -- http://drupal.org/node/133242
   if (!drupal_is_front_page()) {
     $variables['breadcrumb'][] = drupal_get_title();
   }
+  // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
+  else {
+    $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
+  }
 
   $html = '<ul>' . PHP_EOL;
   foreach ($variables['breadcrumb'] as $breadcrumb) {
-    $html .= '<li>' .  $breadcrumb . '</li>';
+    $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
   }
   $html .= '</ul>';
 
