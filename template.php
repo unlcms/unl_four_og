@@ -9,7 +9,7 @@ function unl_og_preprocess_page(&$vars, $hook) {
     if (!empty($vars['node'])) {
       $group_context = og_context();
 
-      //Make sure that the current page has a group associated with it.
+      // Make sure that the current page has a group associated with it.
       if ($group = node_load($group_context['gid'])) {
         $vars['site_name'] = $group->title;
       }
@@ -27,35 +27,55 @@ function unl_og_preprocess_page(&$vars, $hook) {
 }
 
 /**
- * Implements theme_breadcrumb().
+ * Implements hook_menu_breadcrumb_alter().
  */
-function unl_og_breadcrumb($variables) {
-  $breadcrumbs = $variables['breadcrumb'];
+function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
+  echo '<pre>';var_dump($active_trail);echo '</pre>';
+
+  $active_trail[0]['title'] = 'UNL';
+
   if (module_exists('og')) {
     $group_context = og_context();
-    $group = node_load($group_context['gid']);
+    // This is the current node's parent group node
+    $node = node_load($group_context['gid']);
 
-    if ($group && count($breadcrumbs) > 0) {
-      array_unshift($breadcrumbs, str_replace('Home', $group->title, array_shift($breadcrumbs)));
-      // Remove Group breadcrumb for main group
-      if ($group->title == 'University of Nebraska–Lincoln') {
-        array_pop($breadcrumbs);
-      }
+    // Get the nid of the front page
+    $front_url = drupal_get_normal_path(variable_get('site_frontpage', 'node'));
+    $front_url = trim($front_url, '/');
+    $front = explode('/', $front_url);
+    if($front[0]=='node' && ctype_digit($front[1])) {
+      $front_nid = $front[1];
+    }
+
+  //  echo '<pre>';var_dump($node);echo '</pre>';
+
+    // Only splice in the current group if the current group is not the main/front group.
+    if (isset($node) && isset($front_nid) && $node->nid !== $front_nid) {
+      $group_breadcrumb = array(
+        'title' => $node->title,
+        'href' => 'node/'.$node->nid,
+        'link_path' => '',
+        'localized_options' => array( ),
+        'type' => 0,
+      );
+      array_splice($active_trail, 1, 0, array($group_breadcrumb));
     }
   }
 
-  //Prepend UNL
-  if (variable_get('site_name') != 'UNL') {
-    array_unshift($breadcrumbs, '<a href="http://www.unl.edu/">UNL</a>');
-  }
+  echo '<pre>';var_dump($active_trail);echo '</pre>';
+}
 
-  //Append title of current page -- http://drupal.org/node/133242
+/**
+ * Implements theme_breadcrumb().
+ */
+function unl_og_breadcrumb($variables) {//echo '<pre>';var_dump($variables);echo '</pre>';
+  // Append title of current page -- http://drupal.org/node/133242
   if (!drupal_is_front_page()) {
-    $breadcrumbs[] = drupal_get_title();
+    $variables['breadcrumb'][] = drupal_get_title();
   }
 
   $html = '<ul>' . PHP_EOL;
-  foreach ($breadcrumbs as $breadcrumb) {
+  foreach ($variables['breadcrumb'] as $breadcrumb) {
     $html .= '<li>' .  $breadcrumb . '</li>';
   }
   $html .= '</ul>';
