@@ -35,7 +35,7 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   if (module_exists('og')) {
     $group_context = og_context();
     // This is the current node's parent group node
-    $node = node_load($group_context['gid']);
+    $group = node_load($group_context['gid']);
 
     // Get the nid of the front page
     $front_url = drupal_get_normal_path(variable_get('site_frontpage', 'node'));
@@ -46,10 +46,10 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
     }
 
     // Only splice in the current group if the current group is not the main/front group.
-    if (isset($node) && isset($front_nid) && (int)$node->nid !== (int)$front_nid) {
+    if (isset($group) && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
       $group_breadcrumb = array(
-        'title' => $node->title,
-        'href' => 'node/' . $node->nid,
+        'title' => $group->title,
+        'href' => 'node/' . $group->nid,
         'link_path' => '',
         'localized_options' => array(),
         'type' => 0,
@@ -66,6 +66,12 @@ function unl_og_breadcrumb($variables) {
   // Append title of current page -- http://drupal.org/node/133242
   if (!drupal_is_front_page()) {
     $variables['breadcrumb'][] = drupal_get_title();
+    // If on a group page pop the previous line off the array.
+    if ($node = menu_get_object()) {
+      if ($node->type == 'group') {
+        array_pop($variables['breadcrumb']);
+      }
+    }
   }
   // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
   else {
