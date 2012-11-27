@@ -41,7 +41,7 @@ function unl_og_html_head_alter(&$head_elements) {
   $group = unl_og_get_current_group();
   $front_nid = unl_og_get_front_group_id();
 
-  if (isset($group) && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
+  if (isset($group) && $group && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
     $href = 'node/' . $group->nid;
   }
   else {
