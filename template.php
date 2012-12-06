@@ -4,7 +4,7 @@
  * Implements template_preprocess_page().
  */
 function unl_og_preprocess_page(&$vars, $hook) {
-  if (module_exists('og')) {
+  if (module_exists('og_context')) {
     // Set site_name to Group's display name.
     if (!empty($vars['node'])) {
       $group_context = og_context();
@@ -39,6 +39,9 @@ function unl_og_html_head_alter(&$head_elements) {
 
   // Otherwise add a <link rel="home"> tag with the current group as the href attribute.
   $group = unl_og_get_current_group();
+  if (!$group) {
+    return;
+  }
   $front_nid = unl_og_get_front_group_id();
 
   if (isset($group) && $group && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
@@ -64,21 +67,22 @@ function unl_og_html_head_alter(&$head_elements) {
 function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   $active_trail[0]['title'] = 'UNL';
 
-  if (module_exists('og')) {
-    $group = unl_og_get_current_group();
-    $front_nid = unl_og_get_front_group_id();
+  $group = unl_og_get_current_group();
+  if (!$group) {
+    return false;
+  }
+  $front_nid = unl_og_get_front_group_id();
 
-    // Only splice in the current group if the current group is not the main/front group.
-    if (isset($group) && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
-      $group_breadcrumb = array(
-        'title' => $group->title,
-        'href' => 'node/' . $group->nid,
-        'link_path' => '',
-        'localized_options' => array(),
-        'type' => 0,
-      );
-      array_splice($active_trail, 1, 0, array($group_breadcrumb));
-    }
+  // Only splice in the current group if the current group is not the main/front group.
+  if (isset($group) && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
+    $group_breadcrumb = array(
+      'title' => $group->title,
+      'href' => 'node/' . $group->nid,
+      'link_path' => '',
+      'localized_options' => array(),
+      'type' => 0,
+    );
+    array_splice($active_trail, 1, 0, array($group_breadcrumb));
   }
 }
 
@@ -114,8 +118,11 @@ function unl_og_breadcrumb($variables) {
  * Custom function that returns the group node of the current group context.
  */
 function unl_og_get_current_group() {
-  $group_context = og_context();
-  return node_load($group_context['gid']);
+  if (module_exists('og_context')) {
+    $group_context = og_context();
+    return node_load($group_context['gid']);
+  }
+  return false;
 }
 
 /**
