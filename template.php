@@ -96,18 +96,13 @@ function unl_og_breadcrumb($variables) {
   }
   $front_nid = unl_og_get_front_group_id();
 
-  // Append title of current page -- http://drupal.org/node/133242
-  if (!drupal_is_front_page() && $group->nid !== $front_nid) {
-    $variables['breadcrumb'][] = drupal_get_title();
-    // If on a group page pop the previous line off the array.
-    if ($node = menu_get_object()) {
-      if ($node->type == 'group') {
-        array_pop($variables['breadcrumb']);
-      }
-    }
+  $node = menu_get_object();
+  if ($group->nid !== $front_nid && isset($node) && $node->type == 'group') {
+    array_pop($variables['breadcrumb']);
   }
+
   // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
-  else if (drupal_is_front_page()) {
+  if (drupal_is_front_page()) {
     $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
   }
 
