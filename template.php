@@ -74,7 +74,7 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   $front_nid = unl_og_get_front_group_id();
 
   // Only splice in the current group if the current group is not the main/front group.
-  if (isset($group) && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
+  if ($group->nid !== $front_nid) {
     $group_breadcrumb = array(
       'title' => $group->title,
       'href' => 'node/' . $group->nid,
@@ -90,8 +90,14 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
  * Implements theme_breadcrumb().
  */
 function unl_og_breadcrumb($variables) {
+  $group = unl_og_get_current_group();
+  if (!$group) {
+    return false;
+  }
+  $front_nid = unl_og_get_front_group_id();
+
   // Append title of current page -- http://drupal.org/node/133242
-  if (!drupal_is_front_page()) {
+  if (!drupal_is_front_page() && $group->nid !== $front_nid) {
     $variables['breadcrumb'][] = drupal_get_title();
     // If on a group page pop the previous line off the array.
     if ($node = menu_get_object()) {
@@ -101,7 +107,7 @@ function unl_og_breadcrumb($variables) {
     }
   }
   // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
-  else {
+  else if (drupal_is_front_page()) {
     $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
   }
 
@@ -129,6 +135,7 @@ function unl_og_get_current_group() {
  * Custom function that returns the nid of the group being used for <front>.
  */
 function unl_og_get_front_group_id() {
+  $front_nid = 0;
   $front_url = drupal_get_normal_path(variable_get('site_frontpage', 'node'));
   $front_url = trim($front_url, '/');
   $front = explode('/', $front_url);
