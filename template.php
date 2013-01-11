@@ -169,34 +169,3 @@ function unl_og_get_front_group_id() {
   }
   return $front_nid;
 }
-
-/**
- * Implementation of THEMEHOOK_settings() function.
- *
- * @param $saved_settings
- *   array An array of saved settings for this theme.
- * @return
- *   array A form array.
- */
-function unl_og_settings($saved_settings) {
-  /*
-   * The default values for the theme variables. Make sure $defaults exactly
-   * matches the $defaults in the template.php file.
-   */
-  $defaults = array(
-    'unl_og_shoes' => "",
-  );
-
-  // Merge the saved variables and their default values
-  $settings = array_merge($defaults, $saved_settings);
-
-  // Create the form widgets using Forms API
-  $form['unl_og_happy'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Get happy'),
-    '#default_value' => $settings['unl_og_happy'],
-  );
-
-  // Return the additional form widgets
-  return $form;
-}
