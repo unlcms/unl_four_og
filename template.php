@@ -66,53 +66,83 @@ function unl_og_html_head_alter(&$head_elements) {
  */
 function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   $active_trail[0]['title'] = 'UNL';
-
+  
   $group = unl_og_get_current_group();
-  if (!$group) {
-    return false;
-  }
-  $front_nid = unl_og_get_front_group_id();
-
-  // Only splice in the current group if the current group is not the main/front group.
-  if ($group->nid !== $front_nid) {
+  if ($group) {
+    $front_nid = unl_og_get_front_group_id();
+    
+    // Only splice in the current group if the current group is not the main/front group.
+    if ($group->nid !== $front_nid) {
+      $group_breadcrumb = array(
+        'title' => $group->title,
+        'href' => 'node/' . $group->nid,
+        'link_path' => '',
+        'localized_options' => array(),
+        'type' => 0,
+      );
+    }
+  } else {
+    //No group was found, use the default breadcrumbs
+    
+    $base_path = theme_get_setting('unl_og_base_path', 'unl_og');
+    $title     = "";
+    
+    //Get the title and path to use.
+    if (empty($base_path)) {
+      $title     = variable_get('site_name', "Unknown Site name");
+    } else {
+      $path = drupal_lookup_path("source", $base_path);
+      $node = menu_get_object("node", 1, $path);
+      $title = $node->title;
+    }
+    
     $group_breadcrumb = array(
-      'title' => $group->title,
-      'href' => 'node/' . $group->nid,
+      'title' => $title,
+      'href'  => $base_path,
       'link_path' => '',
       'localized_options' => array(),
       'type' => 0,
     );
-    array_splice($active_trail, 1, 0, array($group_breadcrumb));
   }
+
+  array_splice($active_trail, 1, 0, array($group_breadcrumb));
 }
 
 /**
  * Implements theme_breadcrumb().
  */
 function unl_og_breadcrumb($variables) {
-  $group = unl_og_get_current_group();
-  if (!$group) {
-    return false;
-  }
-  $front_nid = unl_og_get_front_group_id();
+  if ($group = unl_og_get_current_group()) {
+    
+  
+    $front_nid = unl_og_get_front_group_id();
+  
+    $node = menu_get_object();
+    if ($group->nid !== $front_nid && isset($node) && $node->type == 'group') {
+      array_pop($variables['breadcrumb']);
+    }
+  
+    // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
+    if (drupal_is_front_page()) {
+      $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
+    }
+  
+    $html = '<ul>' . PHP_EOL;
+    foreach ($variables['breadcrumb'] as $breadcrumb) {
+      $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
+    }
+    $html .= '</ul>';
+  
+    return $html;
+  } else {
+    $html = '<ul>' . PHP_EOL;
+    foreach ($variables['breadcrumb'] as $breadcrumb) {
+      $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
+    }
+    $html .= '</ul>';
 
-  $node = menu_get_object();
-  if ($group->nid !== $front_nid && isset($node) && $node->type == 'group') {
-    array_pop($variables['breadcrumb']);
+    return $html;
   }
-
-  // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
-  if (drupal_is_front_page()) {
-    $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
-  }
-
-  $html = '<ul>' . PHP_EOL;
-  foreach ($variables['breadcrumb'] as $breadcrumb) {
-    $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
-  }
-  $html .= '</ul>';
-
-  return $html;
 }
 
 /**
@@ -138,4 +168,35 @@ function unl_og_get_front_group_id() {
     $front_nid = $front[1];
   }
   return $front_nid;
+}
+
+/**
+ * Implementation of THEMEHOOK_settings() function.
+ *
+ * @param $saved_settings
+ *   array An array of saved settings for this theme.
+ * @return
+ *   array A form array.
+ */
+function unl_og_settings($saved_settings) {
+  /*
+   * The default values for the theme variables. Make sure $defaults exactly
+   * matches the $defaults in the template.php file.
+   */
+  $defaults = array(
+    'unl_og_shoes' => "",
+  );
+
+  // Merge the saved variables and their default values
+  $settings = array_merge($defaults, $saved_settings);
+
+  // Create the form widgets using Forms API
+  $form['unl_og_happy'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Get happy'),
+    '#default_value' => $settings['unl_og_happy'],
+  );
+
+  // Return the additional form widgets
+  return $form;
 }
