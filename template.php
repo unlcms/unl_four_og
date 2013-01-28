@@ -66,11 +66,10 @@ function unl_og_html_head_alter(&$head_elements) {
  */
 function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   $active_trail[0]['title'] = 'UNL';
-  
+
   $group = unl_og_get_current_group();
   if ($group) {
     $front_nid = unl_og_get_front_group_id();
-    
     // Only splice in the current group if the current group is not the main/front group.
     if ($group->nid !== $front_nid) {
       $group_breadcrumb = array(
@@ -81,21 +80,22 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
         'type' => 0,
       );
     }
-  } else {
-    //No group was found, use the default breadcrumbs
-    
+  }
+  else {
+    // No group was found, use the default breadcrumbs.
     $base_path = theme_get_setting('unl_og_base_path', 'unl_og');
-    $title     = "";
-    
-    //Get the title and path to use.
+    $title = '';
+
+    // Get the title and path to use.
     if (empty($base_path)) {
-      $title     = variable_get('site_name', "Unknown Site name");
-    } else {
+      $title = variable_get('site_name', 'Unknown Site name');
+    }
+    else {
       $path = drupal_lookup_path("source", $base_path);
       $node = menu_get_object("node", 1, $path);
       $title = $node->title;
     }
-    
+
     $group_breadcrumb = array(
       'title' => $title,
       'href'  => $base_path,
@@ -105,7 +105,9 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
     );
   }
 
-  array_splice($active_trail, 1, 0, array($group_breadcrumb));
+  if (isset($group_breadcrumb)) {
+    array_splice($active_trail, 1, 0, array($group_breadcrumb));
+  }
 }
 
 /**
@@ -113,28 +115,27 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
  */
 function unl_og_breadcrumb($variables) {
   if ($group = unl_og_get_current_group()) {
-    
-  
     $front_nid = unl_og_get_front_group_id();
-  
+
     $node = menu_get_object();
     if ($group->nid !== $front_nid && isset($node) && $node->type == 'group') {
       array_pop($variables['breadcrumb']);
     }
-  
+
     // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
     if (drupal_is_front_page()) {
       $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
     }
-  
+
     $html = '<ul>' . PHP_EOL;
     foreach ($variables['breadcrumb'] as $breadcrumb) {
       $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
     }
     $html .= '</ul>';
-  
+
     return $html;
-  } else {
+  }
+  else {
     $html = '<ul>' . PHP_EOL;
     foreach ($variables['breadcrumb'] as $breadcrumb) {
       $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
