@@ -32,7 +32,10 @@ function unl_og_preprocess_page(&$vars, $hook) {
 function unl_og_html_head_alter(&$head_elements) {
   // Return if <link rel="home"> has already been set elsewhere (in a Context for example).
   foreach ($head_elements as $key => $element) {
-    if ($element["#tag"] == 'link' && isset($element['#attributes']['rel']) && $element['#attributes']['rel'] == 'home') {
+    if (isset($element["#tag"])
+        && $element["#tag"] == 'link' 
+        && isset($element['#attributes']['rel'])
+        && $element['#attributes']['rel'] == 'home') {
       return;
     }
   }
