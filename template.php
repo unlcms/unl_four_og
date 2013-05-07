@@ -10,7 +10,7 @@ function unl_og_preprocess_page(&$vars, $hook) {
       $group_context = og_context();
 
       // Make sure that the current page has a group associated with it.
-      if ($group = node_load($group_context['gid'])) {
+      if ($group_context && $group = node_load($group_context['gid'])) {
         $vars['site_name'] = $group->title;
       }
     }
@@ -30,17 +30,7 @@ function unl_og_preprocess_page(&$vars, $hook) {
  * Implements hook_html_head_alter().
  */
 function unl_og_html_head_alter(&$head_elements) {
-  // Return if <link rel="home"> has already been set elsewhere (in a Context for example).
-  foreach ($head_elements as $key => $element) {
-    if (isset($element["#tag"])
-        && $element["#tag"] == 'link' 
-        && isset($element['#attributes']['rel'])
-        && $element['#attributes']['rel'] == 'home') {
-      return;
-    }
-  }
-
-  // Otherwise add a <link rel="home"> tag with the current group as the href attribute.
+  // Add a <link rel="home"> tag with the current group as the href attribute.
   $group = unl_og_get_current_group();
   if (!$group) {
     return;
@@ -68,8 +58,6 @@ function unl_og_html_head_alter(&$head_elements) {
  * Implements hook_menu_breadcrumb_alter().
  */
 function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
-  $active_trail[0]['title'] = 'UNL';
-
   $group = unl_og_get_current_group();
   if ($group) {
     $front_nid = unl_og_get_front_group_id();
@@ -118,35 +106,37 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
  */
 function unl_og_breadcrumb($variables) {
   if ($group = unl_og_get_current_group()) {
-    $front_nid = unl_og_get_front_group_id();
-
     $node = menu_get_object();
-    if ($group->nid !== $front_nid && isset($node) && $node->type == 'group') {
+    if ($group->nid !== unl_og_get_front_group_id() && isset($node) && $node->type == 'group') {
       array_pop($variables['breadcrumb']);
     }
+  }
 
-    // Add breadcrumb on front page. unl_og_menu_breadcrumb_alter is not called on front page.
-    if (drupal_is_front_page()) {
-      $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">UNL</a>';
-    }
-
-    $html = '<ul>' . PHP_EOL;
-    foreach ($variables['breadcrumb'] as $breadcrumb) {
-      $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
-    }
-    $html .= '</ul>';
-
-    return $html;
+  if (count($variables['breadcrumb']) == 0) {
+    $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">' . check_plain(unl_wdn_get_site_name_abbreviated()) . '</a>';
   }
   else {
-    $html = '<ul>' . PHP_EOL;
-    foreach ($variables['breadcrumb'] as $breadcrumb) {
-      $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
-    }
-    $html .= '</ul>';
-
-    return $html;
+    // Change 'Home' to be $site_name
+    array_unshift($variables['breadcrumb'],
+                  str_replace('Home', check_plain(unl_wdn_get_site_name_abbreviated()),
+                  array_shift($variables['breadcrumb'])));
   }
+
+  // Prepend UNL
+  array_unshift($variables['breadcrumb'], '<a href="http://www.unl.edu/">UNL</a>');
+
+  // Append title of current page -- http://drupal.org/node/133242
+  if (!drupal_is_front_page()) {
+    $variables['breadcrumb'][] = drupal_get_title();
+  }
+
+  $html = '<ul>' . PHP_EOL;
+  foreach ($variables['breadcrumb'] as $breadcrumb) {
+    $html .= '<li>' .  $breadcrumb . '</li>' . PHP_EOL;
+  }
+  $html .= '</ul>';
+
+  return $html;
 }
 
 /**
@@ -155,7 +145,9 @@ function unl_og_breadcrumb($variables) {
 function unl_og_get_current_group() {
   if (module_exists('og_context')) {
     $group_context = og_context();
-    return node_load($group_context['gid']);
+    if ($group_context) {
+      return node_load($group_context['gid']);
+    }
   }
   return false;
 }
