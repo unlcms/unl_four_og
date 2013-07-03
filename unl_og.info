@@ -1,7 +1,7 @@
 base theme = unl_four
 
-name = UNL OG
-description = Subtheme of Organic Groups modifications for the base UNL theme.
+name = UNL Four OG
+description = Subtheme of Organic Groups modifications for the base UNL Four theme.
 screenshot = screenshot.png
 core = 7.x
 engine = phptemplate
