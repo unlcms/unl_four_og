@@ -113,12 +113,12 @@ function unl_og_breadcrumb($variables) {
   }
 
   if (count($variables['breadcrumb']) == 0) {
-    $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">' . check_plain(unl_wdn_get_site_name_abbreviated()) . '</a>';
+    $variables['breadcrumb'][] = '<a href="' . url('<front>') . '">' . check_plain(unl_four_get_site_name_abbreviated()) . '</a>';
   }
   else {
     // Change 'Home' to be $site_name
     array_unshift($variables['breadcrumb'],
-                  str_replace('Home', check_plain(unl_wdn_get_site_name_abbreviated()),
+                  str_replace('Home', check_plain(unl_four_get_site_name_abbreviated()),
                   array_shift($variables['breadcrumb'])));
   }
 
