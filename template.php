@@ -3,7 +3,7 @@
 /**
  * Implements template_preprocess_page().
  */
-function unl_og_preprocess_page(&$vars, $hook) {
+function unl_four_og_preprocess_page(&$vars, $hook) {
   if (module_exists('og_context')) {
     // Set site_name to Group's display name.
     if (!empty($vars['node'])) {
@@ -29,13 +29,13 @@ function unl_og_preprocess_page(&$vars, $hook) {
 /**
  * Implements hook_html_head_alter().
  */
-function unl_og_html_head_alter(&$head_elements) {
+function unl_four_og_html_head_alter(&$head_elements) {
   // Add a <link rel="home"> tag with the current group as the href attribute.
-  $group = unl_og_get_current_group();
+  $group = unl_four_og_get_current_group();
   if (!$group) {
     return;
   }
-  $front_nid = unl_og_get_front_group_id();
+  $front_nid = unl_four_og_get_front_group_id();
 
   if (isset($group) && $group && isset($front_nid) && (int)$group->nid !== (int)$front_nid) {
     $href = 'node/' . $group->nid;
@@ -57,10 +57,10 @@ function unl_og_html_head_alter(&$head_elements) {
 /**
  * Implements hook_menu_breadcrumb_alter().
  */
-function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
-  $group = unl_og_get_current_group();
+function unl_four_og_menu_breadcrumb_alter(&$active_trail, $item) {
+  $group = unl_four_og_get_current_group();
   if ($group) {
-    $front_nid = unl_og_get_front_group_id();
+    $front_nid = unl_four_og_get_front_group_id();
     // Only splice in the current group if the current group is not the main/front group.
     if ($group->nid !== $front_nid) {
       $group_breadcrumb = array(
@@ -74,7 +74,7 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
   }
   else {
     // No group was found, use the default breadcrumbs.
-    $base_path = theme_get_setting('unl_og_base_path', 'unl_og');
+    $base_path = theme_get_setting('unl_four_og_base_path', 'unl_four_og');
     $title = '';
 
     // Get the title and path to use.
@@ -104,10 +104,10 @@ function unl_og_menu_breadcrumb_alter(&$active_trail, $item) {
 /**
  * Implements theme_breadcrumb().
  */
-function unl_og_breadcrumb($variables) {
-  if ($group = unl_og_get_current_group()) {
+function unl_four_og_breadcrumb($variables) {
+  if ($group = unl_four_og_get_current_group()) {
     $node = menu_get_object();
-    if ($group->nid !== unl_og_get_front_group_id() && isset($node) && $node->type == 'group') {
+    if ($group->nid !== unl_four_og_get_front_group_id() && isset($node) && $node->type == 'group') {
       array_pop($variables['breadcrumb']);
     }
   }
@@ -142,7 +142,7 @@ function unl_og_breadcrumb($variables) {
 /**
  * Custom function that returns the group node of the current group context.
  */
-function unl_og_get_current_group() {
+function unl_four_og_get_current_group() {
   if (module_exists('og_context')) {
     $group_context = og_context();
     if ($group_context) {
@@ -155,7 +155,7 @@ function unl_og_get_current_group() {
 /**
  * Custom function that returns the nid of the group being used for <front>.
  */
-function unl_og_get_front_group_id() {
+function unl_four_og_get_front_group_id() {
   $front_nid = 0;
   $front_url = drupal_get_normal_path(variable_get('site_frontpage', 'node'));
   $front_url = trim($front_url, '/');
