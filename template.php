@@ -6,23 +6,12 @@
 function unl_four_og_preprocess_page(&$vars, $hook) {
   if (module_exists('og_context')) {
     // Set site_name to Group's display name.
-    if (!empty($vars['node'])) {
-      $group_context = og_context();
+    $group_context = og_context();
 
-      // Make sure that the current page has a group associated with it.
-      if ($group_context && $group = node_load($group_context['gid'])) {
-        $vars['site_name'] = $group->title;
-      }
+    // Make sure that the current page has a group associated with it.
+    if ($group_context && $group = node_load($group_context['gid'])) {
+      $vars['site_name'] = $group->title;
     }
-//     //if not dealing with a node, Are we still in group context - views?
-//     if(!$vars['og_id'] && $group = og_get_group_context()){
-//         $vars['site_name'] = print_r($vars['site_name'],true);
-//         $vars['og'] =$group->title;
-//         $vars['og_id'] = $group->nid;
-//     }
-//     if ($vars['og_id']) {
-//       $vars['site_name'] = $vars['og'] . ' <span>&nbsp;' . $vars['site_name'] . '</span>';
-//     }
   }
 }
 
@@ -118,8 +107,8 @@ function unl_four_og_breadcrumb($variables) {
   else {
     // Change 'Home' to be $site_name
     array_unshift($variables['breadcrumb'],
-                  str_replace('Home', check_plain(unl_four_get_site_name_abbreviated()),
-                  array_shift($variables['breadcrumb'])));
+      str_replace('Home', check_plain(unl_four_get_site_name_abbreviated()),
+        array_shift($variables['breadcrumb'])));
   }
 
   // Prepend UNL
@@ -145,6 +134,16 @@ function unl_four_og_breadcrumb($variables) {
 function unl_four_og_get_current_group() {
   if (module_exists('og_context')) {
     $group_context = og_context();
+    $view = views_get_page_view();
+    //Set the og context if we are viewing a views page with an og context
+    if (empty($group_context) && $view = views_get_page_view()) {
+      if ($view->display_handler->plugin_name == 'page' && isset($view->argument['gid'])) {
+        //The gid should be an argument
+        og_context('node', node_load($view->argument['gid']->argument));
+        $group_context = og_context();
+      }
+    }
+
     if ($group_context) {
       return node_load($group_context['gid']);
     }
@@ -164,4 +163,15 @@ function unl_four_og_get_front_group_id() {
     $front_nid = $front[1];
   }
   return $front_nid;
+}
+
+/**
+ * Set og context for view pages
+ *
+ * implements hook_views_pre_render
+ *
+ * @param $view
+ */
+function unl_four_og_views_pre_render(&$view) {
+  unl_four_og_get_current_group();
 }
