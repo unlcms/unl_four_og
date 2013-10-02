@@ -135,12 +135,46 @@ function unl_four_og_get_current_group() {
   if (module_exists('og_context')) {
     $group_context = og_context();
     $view = views_get_page_view();
-    //Set the og context if we are viewing a views page with an og context
+    // Set the og context if we are viewing a Views Page display with one of the
+    //  contextual filters (in the switch) combined with an "OG membership" relationship.
     if (empty($group_context) && $view = views_get_page_view()) {
-      if ($view->display_handler->plugin_name == 'page' && isset($view->argument['gid'])) {
-        //The gid should be an argument
-        og_context('node', node_load($view->argument['gid']->argument));
-        $group_context = og_context();
+      if ($view->display_handler->plugin_name == 'page') {
+        foreach($view->argument as $key => $value) {
+          switch ($key) {
+            case 'gid':
+              og_context('node', node_load($view->argument['gid']->argument));
+              $group_context = og_context();
+              break;
+            case 'title':
+              $query = new EntityFieldQuery();
+              $entities = $query->entityCondition('entity_type', 'node')
+                ->propertyCondition('title', $view->argument['title']->argument)
+                ->propertyCondition('status', 1)
+                ->range(0,1)
+                ->execute();
+              if (!empty($entities['node'])) {
+                $keys = array_keys($entities['node']);
+                og_context('node', node_load(array_shift($keys)));
+                $group_context = og_context();
+              }
+              break;
+            // This is a hack using a field with the specific name 'field_url_path' because
+            //  relying on path alias does not work: https://drupal.org/node/1658352#comment-7927861
+            case 'field_url_path_value':
+              $query = new EntityFieldQuery();
+              $entities = $query->entityCondition('entity_type', 'node')
+                ->fieldCondition('field_url_path', 'value', $view->argument['field_url_path_value']->argument)
+                ->propertyCondition('status', 1)
+                ->range(0,1)
+                ->execute();
+              if (!empty($entities['node'])) {
+                $keys = array_keys($entities['node']);
+                og_context('node', node_load(array_shift($keys)));
+                $group_context = og_context();
+              }
+              break;
+          }
+        }
       }
     }
 
